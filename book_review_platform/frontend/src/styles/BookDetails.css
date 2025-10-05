@@ -1,0 +1,240 @@
+/* Container Styling */
+.book-details-container {
+  display: flex;
+  gap: 40px;
+  margin: 100px auto;
+  padding: 20px;
+  max-width: 1200px;
+  background: #ffffff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  position: relative;
+  animation: fadeIn 0.8s ease-in-out;
+}
+
+/* Book Cover Effects */
+.book-cover-section {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.book-cover-large {
+  max-width: 100%;
+  height: 350px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.book-cover-large:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+}
+
+.shopping-link-button,
+.add-ratings-button,
+.view-reviews-button {
+  width: 180px;
+  font-size: 16px;
+  border-radius: 8px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.3s ease;
+}
+
+.shopping-link-button {
+  background-color: #022140;
+  border-color: white;
+  color: white;
+}
+
+.add-ratings-button {
+  background-color: #ffffff !important;
+  border: 2px solid #555555 !important;
+  color: #555555 !important;
+}
+
+.add-ratings-button:hover,
+.shopping-link-button:hover,
+.view-reviews-button:hover {
+  transform: scale(1.05) !important;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Book Info Section */
+.book-info-section {
+  flex: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 20px;
+}
+
+.book-title {
+  font-size: 36px !important;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 0;
+}
+
+/* Animated Rating Stars */
+.book-rating {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  color: #555555;
+  justify-content: center; /* This centers the content */
+  text-align: center; /* Optional: ensures text is centered if the container is larger than content */
+}
+
+.rating-value {
+  font-weight: bold;
+}
+
+.rating-value {
+  font-size: 18px;
+  font-weight: bold;
+}
+
+.rating-stars span {
+  font-size: 22px;
+  cursor: pointer;
+  transition: color 0.3s ease-in-out;
+}
+
+.rating-stars span:hover {
+  color: gold;
+}
+
+/* Author Styling */
+.book-author {
+  font-size: 20px;
+  color: #555555;
+  font-style: italic;
+}
+
+/* Description Styling */
+.book-description {
+  font-size: 16px;
+  line-height: 1.5;
+  color: #666666;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  text-align: justify;
+}
+
+/* Review Button */
+.view-reviews-button {
+  background-color: #022140;
+  color: white;
+  border: 2px solid #022140;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  width: 180px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.3s ease;
+}
+
+.view-reviews-button:hover {
+  background-color: #01334a !important;
+  border-color: #01334a;
+}
+
+/* No Data Message */
+.no-data {
+  text-align: center;
+  font-size: 18px;
+  color: #777777;
+  margin-top: 40px;
+}
+
+/* Genre Tags - With Glow Effect */
+.book-genres {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.genre-tag {
+  display: inline-block;
+  background-color: #f0f0f0;
+  color: #022140;
+  padding: 5px 10px;
+  margin: 5px;
+  border-radius: 15px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: default;
+  border: 1px solid #ccc;
+  transition: all 0.3s ease;
+}
+
+.genre-tag:hover {
+  background-color: #022140;
+  color: white;
+  border-color: #022140;
+  box-shadow: 0 0 10px rgba(2, 33, 64, 0.5);
+}
+
+/* Floating Back Button */
+.back-btn {
+  font-size: 16px;
+  color: #022140;
+  position: absolute;
+  top: 150px !important;
+  left: 75px !important;
+  width:30px !important;
+  padding: 5px 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.3s ease;
+}
+
+.back-btn:hover {
+  background-color: #022140 !important;
+  color: white !important;
+  border-radius: 5px;
+  transform: scale(1.1);
+}
+
+/* .back-btn::after {
+  content: "Go Back";
+  position: absolute;
+  background-color: rgba(150, 150, 150, 0.75) !important; /* Soft gray for subtlety */
+  /* color: white;
+  padding: 5px 10px;
+  border-radius: 5px;
+  font-size: 12px;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, background-color 0.3s ease;
+  white-space: nowrap;
+}
+
+.back-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+  background-color: rgba(160, 160, 160, 0.85) !important; /* Slightly brighter on hover */
+/* } */ 
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

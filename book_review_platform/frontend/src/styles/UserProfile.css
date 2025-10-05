@@ -1,0 +1,119 @@
+.user-profile-card {
+    width: 700px;
+    margin: 40px auto;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+    background-color: #ffffff;
+    border: 1px solid #f0f0f0;
+    margin-bottom: 40px !important;
+  }
+  
+  .user-avatar-container{
+    margin:60px;
+  }
+  
+  .user-profile-header {
+    position: relative; 
+    margin-bottom: 20px;
+    width: 100%;
+}
+
+.profile-back-button {
+    font-size: 18px;
+    border-color: #022140 !important;
+    background: transparent !important;
+    cursor: pointer;
+    position: absolute;
+    top: 20px; 
+    left: 10px;
+
+}
+
+.profile-edit-button {
+    background: transparent;
+    font-size: 22px;
+    color: #022140;
+    cursor: pointer;
+    border: none;
+    width: 40px;
+    height: 40px;
+    position: absolute;
+    top:150px;
+    right: 10px;
+    border-color: #022140 !important;
+}
+
+.profile-back-button:hover, .profile-edit-button:hover {
+    background-color: #022140 !important;
+    color: white !important;
+}
+  
+  .user-profile-details {
+    margin-top: 20px;
+    text-align: justify;
+  }
+  
+  .user-profile-details .ant-row {
+    background-color: #fafafa;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .user-profile-details .ant-row:last-child {
+    margin-bottom: 0;
+  }
+  
+  .user-profile-details .ant-col:first-child {
+    font-weight: bold;
+    color: #555;
+  }
+  
+  /* Profile Option Section */
+  .profile-options {
+    margin-top: 40px;
+  }
+  
+  .profile-options .ant-row {
+    margin-bottom: 15px;
+  }
+  
+  .profile-options .ant-btn {
+    width: 100%;
+    padding: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+  }
+  
+  .profile-options .ant-btn:hover {
+    background-color: #022140 !important;
+    color: white !important;
+  }
+  
+  .profile-options .ant-btn-danger {
+    background-color: #ff4d4f;
+    color: white;
+  }
+  
+  .profile-options .ant-btn-danger:hover {
+    background-color: #ff7875 !important;
+  }
+  
+  .ant-modal-content {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .ant-modal-header {
+    background-color: #f0f0f0;
+    border-bottom: 1px solid #e6e6e6;
+  }
+  
+  .ant-modal-title {
+    font-size: 18px;
+    font-weight: bold;
+  }
+  
