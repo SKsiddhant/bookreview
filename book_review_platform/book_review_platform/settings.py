@@ -12,29 +12,60 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from datetime import timedelta
-import os;
+import os
+
+from django.core.exceptions import ImproperlyConfigured
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
+def _env_bool(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    return value.strip().lower() in ('1', 'true', 'yes', 'on')
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-gf85(3mf^7ka!rt@dbeo5y330+te5)(j5@bx@wl_31r56gxkfk'
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
+
+def _env_list(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return list(default)
+    return [item.strip() for item in value.split(',') if item.strip()]
+
+
+# Local development works with no configuration (DEBUG on, console e-mail).
+# For anything else set DJANGO_DEBUG=0 and the variables below - see the README.
+DEBUG = _env_bool('DJANGO_DEBUG', True)
+
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    if not DEBUG:
+        raise ImproperlyConfigured('Set DJANGO_SECRET_KEY when DJANGO_DEBUG is off.')
+    SECRET_KEY = 'django-insecure-development-only-key'
+
+ALLOWED_HOSTS = _env_list('DJANGO_ALLOWED_HOSTS', ['localhost', '127.0.0.1'] if DEBUG else [])
+
+# URL of the React app: used in e-mailed links and for CORS/CSRF.
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000').rstrip('/')
+
+# E-mail: real SMTP only when credentials are provided, otherwise print e-mails to the console.
+EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
+EMAIL_PORT = int(os.environ.get('EMAIL_PORT', '587'))
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'noreply.critique.cove@gmail.com'  
-EMAIL_HOST_PASSWORD = 'uqrt dflv eadx xrzx'  
-DEFAULT_FROM_EMAIL = 'noreply.critique.cove@gmail.com'  
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', '')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+EMAIL_BACKEND = (
+    'django.core.mail.backends.smtp.EmailBackend'
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD
+    else 'django.core.mail.backends.console.EmailBackend'
+)
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'noreply@localhost')
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
-
-ALLOWED_HOSTS = []
+if not DEBUG:
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True
 
 
 # Application definition
@@ -57,6 +88,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',  # must come before CommonMiddleware
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -64,7 +96,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware'
 ]
 
 ROOT_URLCONF = 'book_review_platform.urls'
@@ -142,35 +173,14 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# CORS_ALLOWED_ORIGINS = [
-#     "http://localhost:3000",  # Frontend React app
-# ]
-CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",  # React front-end URL
-]
-CORS_ORIGIN_WHITELIST = [
-    "http://127.0.0.1:8000",  # Adjust according to your frontend URL
-]
-
+_default_origins = [FRONTEND_URL, 'http://localhost:3000', 'http://127.0.0.1:3000']
+CORS_ALLOWED_ORIGINS = _env_list('CORS_ALLOWED_ORIGINS', dict.fromkeys(_default_origins))
 CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = list(CORS_ALLOWED_ORIGINS)
 
-CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-]
-
-REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.SessionAuthentication',
-        
-    ],
-}
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
-        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -181,7 +191,7 @@ SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
     'ROTATE_REFRESH_TOKENS': False,
-    'BLACKLIST_AFTER_ROTATION': True,
+    'BLACKLIST_AFTER_ROTATION': False,  # token_blacklist app is not installed
     'ALGORITHM': 'HS256',
     'SIGNING_KEY': SECRET_KEY,  # Use SECRET_KEY directly here
     'VERIFYING_KEY': None,
@@ -197,3 +207,6 @@ SIMPLE_JWT = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+# Uploaded profile pictures
+MAX_PROFILE_PIC_BYTES = 5 * 1024 * 1024

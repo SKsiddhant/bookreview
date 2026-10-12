@@ -3,6 +3,8 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Rate, Modal, message } from 'antd';
 import { LeftOutlined, ShoppingCartOutlined, StarFilled } from "@ant-design/icons";
 import '../styles/BookDetails.css';
+import { API_BASE, googleKey } from '../config';
+import { sanitizeHtml, decodeEntities } from '../utils/sanitizeHtml';
 
 const BookDetails = () => {
     const { state } = useLocation();
@@ -13,14 +15,13 @@ const BookDetails = () => {
     const [cumulativeRating, setCumulativeRating] = useState(null);
     const [existingRating, setExistingRating] = useState(null);
     const [isModalVisible, setIsModalVisible] = useState(false);
-    const GOOGLE_BOOKS_API_KEY = 'AIzaSyCwmn5oVKeeCbiFEbzJComNr1O2vK0bHXw';
     const { title, authors = [], description, imageLinks, categories } = bookData || {};
     
     // Fetch book data from Google Books API
     const fetchBookDetails = useCallback(async (bookId) => {
       try {
         const response = await fetch(
-          `https://www.googleapis.com/books/v1/volumes/${bookId}?key=${GOOGLE_BOOKS_API_KEY}`
+          `https://www.googleapis.com/books/v1/volumes/${bookId}${googleKey('?')}`
         );
         const data = await response.json();
         if (data.volumeInfo) {
@@ -37,7 +38,7 @@ const BookDetails = () => {
         const token = localStorage.getItem('access_token');
         if (!token) throw new Error('No authentication token found');
 
-        const response = await fetch(`http://127.0.0.1:8000/ratings/get-book-ratings/?bookId=${bookId}`, {
+        const response = await fetch(`${API_BASE}/ratings/get-book-ratings/?bookId=${bookId}`, {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -68,21 +69,11 @@ const BookDetails = () => {
       fetchData();
     }, [book?.id, fetchBookDetails, fetchRatings]);  // Add functions here    
 
-    // Function to decode HTML entities (like &rsquo; -> ')
-    const decodeHtml = (html) => {
-        const txt = document.createElement('textarea');
-        txt.innerHTML = html;
-        return txt.value;
-    };
-    
+    // Google Books descriptions are third-party HTML. Decode entities (&rsquo; -> '), turn newlines
+    // into <br>, then pass the result through an allow-list sanitiser before it is injected.
     const formatDescription = (desc) => {
       if (!desc) return '';
-      const decodedDescription = decodeHtml(desc);
-      const formattedDescription = decodedDescription.replace(/\n/g, '<br />');
-      const paragraphs = formattedDescription.split(/\n\s*\n/);
-      return paragraphs
-        .map((para, index) => `<p key=${index}>${para}</p>`)
-        .join('');
+      return sanitizeHtml(decodeEntities(desc).replace(/\n/g, '<br />'));
     };
 
     const handleRatingChange = (value) => {
@@ -92,7 +83,7 @@ const BookDetails = () => {
     const handleRatingSubmit = async () => {
       try {
         const token = localStorage.getItem('access_token');
-        const response = await fetch('http://localhost:8000/ratings/rate-book/', {
+        const response = await fetch(`${API_BASE}/ratings/rate-book/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

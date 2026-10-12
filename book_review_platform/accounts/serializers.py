@@ -3,6 +3,10 @@ from django.contrib.auth.models import User
 from .models import Profile, Genre
 import os
 
+from django.core.exceptions import ValidationError as DjangoValidationError
+
+from .images import detect_extension
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -30,28 +34,43 @@ class ProfileSerializer(serializers.ModelSerializer):
         queryset=Genre.objects.all(),
         many=True
     )
-    username = serializers.CharField(source='user.username')
+    username = serializers.CharField(source='user.username', read_only=True)
 
     class Meta:
         model = Profile
         fields = ['bio', 'profile_pic', 'favorite_genres', 'username']
 
+    def validate_profile_pic(self, value):
+        if value is None:
+            return value
+        try:
+            ext = detect_extension(value.read())
+        except DjangoValidationError as exc:
+            raise serializers.ValidationError(exc.messages)
+        finally:
+            value.seek(0)
+        value.name = f'upload.{ext}'  # extension comes from the detected format, not the client
+        return value
+
     def update(self, instance, validated_data):
-        favorite_genres = validated_data.pop('favorite_genres', [])
+        favorite_genres = validated_data.pop('favorite_genres', None)
         new_profile_pic = validated_data.get('profile_pic', None)
 
-        if new_profile_pic: # Handle profile picture update
-            if instance.profile_pic and os.path.isfile(instance.profile_pic.path): 
-                os.remove(instance.profile_pic.path) # Delete the old profile picture if it exists
+        if new_profile_pic:  # replace the picture
+            if instance.profile_pic:
+                try:
+                    if os.path.isfile(instance.profile_pic.path):
+                        os.remove(instance.profile_pic.path)  # delete the old file
+                except (OSError, ValueError):
+                    pass
+            ext = new_profile_pic.name.rsplit('.', 1)[-1]
+            instance.profile_pic.save(f"{instance.user.username}_profile.{ext}", new_profile_pic)
 
-            file_extension = new_profile_pic.name.split('.')[-1]
-            new_file_name = f"{instance.user.username}_profile.{file_extension}" # Generate a new file name for the profile picture
-            
-            instance.profile_pic.save(new_file_name, new_profile_pic) # Save the new profile picture with the new file name
-
-        instance.bio = validated_data.get('bio', instance.bio) # Update other fields
+        instance.bio = validated_data.get('bio', instance.bio)
         instance.save()
 
-        instance.favorite_genres.set(favorite_genres)  # Update favorite genres (many-to-many relationship)
-        
+        # Only touch the genres if the request included them; a partial update used to wipe them.
+        if favorite_genres is not None:
+            instance.favorite_genres.set(favorite_genres)
+
         return instance

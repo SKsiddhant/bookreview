@@ -1,3 +1,5 @@
+import math
+
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
@@ -5,8 +7,8 @@ from .models import Rating, Book
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import permission_classes
 
-@permission_classes([IsAuthenticated])
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def rate_book(request):
     """
     Endpoint to submit or update a rating for a book.
@@ -23,10 +25,15 @@ def rate_book(request):
     # Validate rating value
     try:
         rating_value = float(rating_value)
-        if rating_value < 0 or rating_value > 5:
-            return Response({"error": "Rating must be between 0 and 5"}, status=status.HTTP_400_BAD_REQUEST)
-    except ValueError:
+    except (TypeError, ValueError):
         return Response({"error": "Invalid rating value"}, status=status.HTTP_400_BAD_REQUEST)
+    # float("nan") parses fine and slips past range checks, then poisons every average
+    if not math.isfinite(rating_value) or rating_value < 0 or rating_value > 5:
+        return Response({"error": "Rating must be between 0 and 5"}, status=status.HTTP_400_BAD_REQUEST)
+    if not isinstance(book_id, str) or len(book_id) > 255:
+        return Response({"error": "Invalid bookId"}, status=status.HTTP_400_BAD_REQUEST)
+    title = str(title)[:200]
+    authors = str(authors)
 
     # Get or create the book record
     book, created = Book.objects.get_or_create(
@@ -57,8 +64,8 @@ def rate_book(request):
     else:
         return Response({"message": "Rating submitted successfully"}, status=status.HTTP_201_CREATED)
 
-@permission_classes([IsAuthenticated])
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_book_ratings(request):
     """
     Endpoint to get the average rating and all ratings for a book.

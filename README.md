@@ -4,6 +4,34 @@ A full-stack web application where users can **search for books, read and write 
 
 ---
 
+## Run locally
+
+```bash
+# backend
+python -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+cd book_review_platform
+python manage.py migrate          # creates db.sqlite3 and seeds the genres
+python manage.py runserver        # http://127.0.0.1:8000
+
+# frontend (second terminal)
+cd book_review_platform/frontend
+cp .env.example .env.local        # optional: API URL, Google Books key
+npm install
+npm start                         # http://localhost:3000
+```
+
+With no configuration, verification and password-reset e-mails are **printed in the backend console**. To send real e-mail or to deploy, set the environment variables listed in `book_review_platform/.env.example` (`DJANGO_SECRET_KEY` is mandatory when `DJANGO_DEBUG=0`). Secrets are never read from source code.
+
+## Tests
+
+```bash
+cd book_review_platform && python manage.py test        # 37 backend tests
+cd book_review_platform/frontend && CI=true npm test -- --watchAll=false
+```
+
+---
+
 ## Tech Stack
 - **Front-end:** ReactJS, Ant Design, HTML, CSS, JavaScript  
 - **Back-end:** Django, Django REST Framework  

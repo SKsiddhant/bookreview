@@ -4,6 +4,7 @@ import { HeartOutlined, HeartFilled, EllipsisOutlined, LeftOutlined, EditOutline
 import api from "../api/axiosInstance";
 import { useLocation } from "react-router-dom";
 import "../styles/Review.css";
+import { API_BASE } from '../config';
 
 const Review = () => {
   const location = useLocation();
@@ -202,9 +203,11 @@ const checkTruncation = useCallback((id, content) => {
   tempElement.style.visibility = "hidden";
   tempElement.style.width = "100%";
   tempElement.style.lineHeight = `${lineHeight}px`;
-  tempElement.style.whiteSpace = "normal";
+  tempElement.style.whiteSpace = "pre-wrap"; // respects line breaks without parsing the text as HTML
   tempElement.style.overflow = "hidden";
-  tempElement.innerHTML = content.replace(/\n/g, "<br>"); // Respect paragraphs
+  // Review text is user input: assigning it to innerHTML (even on a detached element) executes
+  // payloads such as <img src=x onerror=...>, so measure it as plain text.
+  tempElement.textContent = content;
   document.body.appendChild(tempElement);
 
   const isContentTruncated = tempElement.offsetHeight > maxHeight;
@@ -274,7 +277,7 @@ return (
         <div className="review-card">
           <div className="review-card-header">
             <Avatar
-              src={`http://localhost:8000${review.user?.profile_pic}`}
+              src={`${API_BASE}${review.user?.profile_pic}`}
               className="review-avatar"
               size={64}
             />
