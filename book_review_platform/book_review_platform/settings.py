@@ -66,6 +66,8 @@ if not DEBUG:
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
+    # Opt-in HSTS: only enable once the site is served over HTTPS (browsers then refuse plain HTTP for that long).
+    SECURE_HSTS_SECONDS = int(os.environ.get('DJANGO_HSTS_SECONDS', '0'))
 
 
 # Application definition
