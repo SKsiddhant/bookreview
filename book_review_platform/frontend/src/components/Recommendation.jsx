@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Spin, Typography, message } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
 import '../styles/Recommendations.css';
+import { API_BASE, googleKey } from '../config';
 
 const { Title } = Typography;
 
@@ -32,7 +33,7 @@ const Recommendation = () => {
     const fetchRecommendations = async () => {
       try {
         // Fetch favorite genres from the backend
-        const genresResponse = await fetch('http://127.0.0.1:8000/accounts/user/favorite-genres/', {
+        const genresResponse = await fetch(`${API_BASE}/accounts/user/favorite-genres/`, {
           headers: { Authorization: `Bearer ${localStorage.getItem('access_token')}` },
         });
 
@@ -57,7 +58,6 @@ const Recommendation = () => {
         genres = [...genres, ...minimumGenres.slice(genres.length)];
 
         // Google Books API key
-        const GOOGLE_BOOKS_API_KEY = 'AIzaSyCwmn5oVKeeCbiFEbzJComNr1O2vK0bHXw';
 
         // Function to fetch books with a delay to avoid rate limits
         const fetchBooksWithDelay = async (genres, delay = 300) => {
@@ -68,7 +68,7 @@ const Recommendation = () => {
             try {
               // Fetch books published after 2010
               const response = await fetch(
-                `https://www.googleapis.com/books/v1/volumes?q=subject:${genre}+&maxResults=40&orderBy=relevance&publishedDate=2010-01-01&key=${GOOGLE_BOOKS_API_KEY}`
+                `https://www.googleapis.com/books/v1/volumes?q=subject:${genre}+&maxResults=40&orderBy=relevance&publishedDate=2010-01-01${googleKey('&')}`
               );
               const data = await response.json();
               responses.push(data);

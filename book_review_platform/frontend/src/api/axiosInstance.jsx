@@ -1,8 +1,9 @@
 import axios from "axios";
 import { message } from "antd";
+import { API_BASE } from '../config';
 
 const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/", // Base API URL
+  baseURL: `${API_BASE}/`, // Base API URL
 });
 
 // Request Interceptor: Attach access token to headers
@@ -33,7 +34,7 @@ api.interceptors.response.use(
           return Promise.reject(error);
         }
 
-        const response = await axios.post("http://127.0.0.1:8000/auth/token/refresh/", {
+        const response = await axios.post(`${API_BASE}/accounts/token/refresh/`, {
           refresh: refreshToken,
         });
 

@@ -12,62 +12,44 @@ class ReviewsListView(APIView):
 
     def get(self, request, book_id):
         try:
-            # Look for the book using the google_id (book_id)
             book = Book.objects.get(google_id=book_id)
-            reviews = book.reviews.all().order_by('-created_at')
-
-            if not reviews.exists():
-                return Response(
-                    {'message': 'No reviews available. Be the first one to add a review!'},
-                    status=status.HTTP_200_OK,
-                )
-
-            serializer = ReviewSerializer(reviews, many=True, context={'request': request})  # Pass the request context
-            return Response(serializer.data, status=status.HTTP_200_OK)
         except Book.DoesNotExist:
             return Response({'error': 'Book not found'}, status=status.HTTP_404_NOT_FOUND)
 
-    def post(self, request, book_id):
-        try:
-            # Log incoming data
-            print("Request data:", request.data)
-            print("User:", request.user)  # Log the user
-
-            book_data = request.data.get('book', {})
-            google_id = book_data.get('google_id')
-            title = book_data.get('title')
-            authors = book_data.get('authors')
-
-            # Validate book details
-            if not (google_id and title and authors):
-                return Response(
-                    {'error': 'Missing book details (google_id, title, authors)'},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            # Create or fetch the book
-            book, created = Book.objects.get_or_create(
-                google_id=google_id,
-                defaults={
-                    'title': title,
-                    'authors': authors,
-                },
+        reviews = list(book.reviews.all()
+                       .select_related('user__profile')
+                       .prefetch_related('likes')
+                       .order_by('-created_at'))
+        if not reviews:
+            return Response(
+                {'message': 'No reviews available. Be the first one to add a review!'},
+                status=status.HTTP_200_OK,
             )
-            print(f"Book: {book}, Created: {created}")
+        serializer = ReviewSerializer(reviews, many=True, context={'request': request})
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
-            # Add the review
-            serializer = ReviewSerializer(data=request.data)
-            if serializer.is_valid():
-                review = serializer.save(user=request.user, book=book)  # Ensure user is explicitly passed
-                print(f"Review saved: {review}")
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
+    def post(self, request, book_id):
+        book_data = request.data.get('book')
+        if not isinstance(book_data, dict):
+            return Response({'error': 'Missing book details (google_id, title, authors)'},
+                            status=status.HTTP_400_BAD_REQUEST)
+        google_id = book_data.get('google_id')
+        title = book_data.get('title')
+        authors = book_data.get('authors')
+        if not (google_id and title and authors) or not all(isinstance(v, str) for v in (google_id, title, authors)):
+            return Response({'error': 'Missing book details (google_id, title, authors)'},
+                            status=status.HTTP_400_BAD_REQUEST)
 
-            print("Serializer errors:", serializer.errors)
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        book, _ = Book.objects.get_or_create(
+            google_id=google_id[:255],
+            defaults={'title': title[:200], 'authors': authors},
+        )
 
-        except Exception as e:
-            print("Error:", str(e))
-            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        serializer = ReviewSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, book=book)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 # Review Detail View (GET, PUT, DELETE)
@@ -139,8 +121,9 @@ class ReportReviewView(APIView):
             review = Review.objects.get(id=review_id)
             reason = request.data.get("reason")
 
-            if not reason:
+            if not reason or not isinstance(reason, str):
                 return JsonResponse({"error": "Reason for report is required"}, status=400)
+            reason = reason.strip()[:255]
 
             # Create a report entry in the database
             report = Report.objects.create(
